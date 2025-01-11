@@ -32,7 +32,8 @@ class RouteTrieNode:
         """
         Initialize a RouteTrieNode with an empty dictionary for children and no handler.
         """
-        pass
+        self.children = {}
+        self.handler = None
 
 class RouteTrie:
     """
@@ -48,7 +49,8 @@ class RouteTrie:
         Args:
         root_handler (str): The handler for the root node.
         """
-        pass
+        self.root = RouteTrieNode()
+        self.root.handler = root_handler
 
     def insert(self, path_parts: list[str], handler: str) -> None:
         """
@@ -58,7 +60,27 @@ class RouteTrie:
         path_parts (list[str]): A list of parts of the route.
         handler (str): The handler for the route.
         """
-        pass
+        self._insert_recursive(self.root, path_parts, handler)
+
+    def _insert_recursive(self, node: RouteTrieNode, path_parts: list[str], handler: str) -> None:
+        """
+        A helper method for inserting nodes recursively.
+
+        Args:
+        node (RouteTrieNode): The current node in the trie.
+        path_parts (list[str]): Remaining path parts to insert.
+        handler (str): The handler for the route.
+        """
+        if not path_parts:
+            node.handler = handler
+            return
+
+        part = path_parts[0]
+        if part not in node.children:
+            node.children[part] = RouteTrieNode()
+
+        # Recur for the next part of the path
+        self._insert_recursive(node.children[part], path_parts[1:], handler)
 
     def find(self, path_parts: list[str]) ->  Optional[str]:
         """
@@ -70,7 +92,28 @@ class RouteTrie:
         Returns:
         str or None: The handler for the route if found, otherwise None.
         """
-        pass
+        return self._find_recursive(self.root, path_parts)
+
+    def _find_recursive(self, node: RouteTrieNode, path_parts: list[str]) -> Optional[str]:
+        """
+        A helper method for finding handlers recursively.
+
+        Args:
+        node (RouteTrieNode): The current node in the trie.
+        path_parts (list[str]): Remaining path parts to find.
+
+        Returns:
+        str or None: The handler for the route if found, otherwise None.
+        """
+        if not path_parts:
+            return node.handler
+
+        part = path_parts[0]
+        if part not in node.children:
+            return None
+
+        # Recur for the next part of the path
+        return self._find_recursive(node.children[part], path_parts[1:])
 
 class Router:
     """
@@ -88,7 +131,8 @@ class Router:
         root_handler (str): The handler for the root route.
         not_found_handler (str): The handler for routes that are not found.
         """
-        pass
+        self.route_trie = RouteTrie(root_handler)
+        self.not_found_handler = not_found_handler
 
     def add_handler(self, path: str, handler: str) -> None:
         """
@@ -98,7 +142,8 @@ class Router:
         path (str): The route path.
         handler (str): The handler for the route.
         """
-        pass
+        path_parts = self.split_path(path)
+        self.route_trie.insert(path_parts, handler)
 
     def lookup(self, path: str) -> str:
         """
@@ -110,7 +155,11 @@ class Router:
         Returns:
         str: The handler for the route if found, otherwise the not-found handler.
         """
-        pass
+        handler = self.route_trie.find(path)
+        if handler:
+            return handler
+        else:
+            return self.not_found_handler
 
     def split_path(self, path: str) -> list[str]:
         """
@@ -122,7 +171,10 @@ class Router:
         Returns:
             List[str]: A list of parts of the path.
         """
-        pass
+        # Remove leading and trailing slashes, then split by '/'
+        path_parts = path.strip('/').split('/')
+        # Return empty list if the path is just slashes or empty
+        return path_parts if path_parts != [''] else []
 
 if __name__ == '__main__':
     # create the router and add a route

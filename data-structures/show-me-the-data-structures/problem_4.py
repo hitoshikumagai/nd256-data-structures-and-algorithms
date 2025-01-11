@@ -132,8 +132,21 @@ if __name__ == "__main__":
     print("Test Case 1")
     print(is_user_in_group("sub_child_user", parent))  # Expected output: True
 
-    # Test Case 2
-    pass
+    # Test Case 2: User is directly in the parent group
+    print("\nTest Case 2: User is directly in the parent group")
+    parent.add_user("parent_user")
+    print(is_user_in_group("parent_user", parent))  # Expected output: True
 
-    # Test Case 3
-    pass
+    # Test Case 3: User does not exist in any group
+    print("\nTest Case 3: User does not exist in any group")
+    # Testing with a non-existent user
+    print(is_user_in_group("nonexistent_user", parent))  # Expected output: False
+
+    # Additional test cases for edge cases
+    print("\nTest Case 4: Testing with None as user")
+    print(is_user_in_group(None, parent))  # Expected output: False
+
+    # Test Case 5: Empty group structure
+    print("\nTest Case 5: Empty group structure")
+    empty_group = Group("empty")
+    print(is_user_in_group("any_user", empty_group))  # Expected output: False

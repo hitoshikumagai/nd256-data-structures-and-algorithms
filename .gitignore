@@ -17,6 +17,9 @@ local.properties
 .loadpath
 .recommenders
 
+
+testdir*
+
 # External tool builders
 .externalToolBuilders/
 

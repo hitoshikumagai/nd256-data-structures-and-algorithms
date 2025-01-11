@@ -26,7 +26,31 @@ def sort_012(input_list: list[int]) -> list[int]:
     Returns:
     list[int]: The sorted list with all 0s, followed by all 1s, and then all 2s.
     """
-    pass
+ # Base case: if the input list is of length 1 or less, it's already sorted.
+    if len(input_list) <= 1:
+        return input_list
+    
+    # Recursive case: sort the list by moving elements to the correct position.
+    # This example works by counting 0's, 1's, and 2's.
+    
+    # Helper function to process a sublist and return sorted elements.
+    def sort_sublist(arr, index=0, zero_count=0, one_count=0, two_count=0):
+        # Base case: if we reached the end of the array, we reconstruct it.
+        if index == len(arr):
+            return [0] * zero_count + [1] * one_count + [2] * two_count
+        
+        # Recursive case: process the element at `index`.
+        if arr[index] == 0:
+            zero_count += 1
+        elif arr[index] == 1:
+            one_count += 1
+        else:
+            two_count += 1
+        
+        return sort_sublist(arr, index + 1, zero_count, one_count, two_count)
+    
+    # Start the sorting process from the first element.
+    return sort_sublist(input_list)
 
 def test_function(test_case: list[list[int]]) -> None:
     """

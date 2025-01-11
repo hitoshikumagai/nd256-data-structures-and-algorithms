@@ -25,7 +25,32 @@ def rotated_array_search(input_list: list[int], number: int) -> int:
     Returns:
     int: Index of the target number or -1 if not found
     """
-    pass
+    def search(left: int, right: int) -> int:
+        # Base case: If the range is invalid (left > right), return -1
+        if left > right:
+            return -1
+
+        mid = (left + right) // 2
+        
+        # Check if the middle element is the target
+        if input_list[mid] == number:
+            return mid
+        
+        # Determine if the left half is sorted
+        if input_list[left] <= input_list[mid]:
+            # Target is in the left half
+            if input_list[left] <= number < input_list[mid]:
+                return search(left, mid - 1)
+            else:
+                return search(mid + 1, right)
+        else:
+            # Target is in the right half
+            if input_list[mid] < number <= input_list[right]:
+                return search(mid + 1, right)
+            else:
+                return search(left, mid - 1)
+
+    return search(0, len(input_list) - 1)
 
 # Test function using provided test cases
 def test_function(test_case: list[list[int], int]) -> None:

@@ -22,7 +22,36 @@ def sqrt(number: int) -> int:
     Returns:
     int: Floored square root
     """
-    pass
+
+    if number < 0:
+        raise ValueError("Square root is not defined for negative numbers.")
+    
+    if number == 0 or number == 1:
+        return number
+
+    # Binary search initialization
+    start, end = 0, number
+    result = 0
+
+    for _ in range(number + 1):  # Simulates the iterative process
+        mid = (start + end) // 2
+        
+        # Check if mid is the square root
+        if mid * mid == number:
+            return mid
+        
+        # If mid squared is less than the number, discard the left half
+        if mid * mid < number:
+            start = mid + 1
+            result = mid  # Store the floor of the square root
+        else:
+            end = mid - 1  # Discard the right half
+        
+        # Break the loop when start surpasses end
+        if start > end:
+            break
+
+    return result
 
 if __name__ == "__main__":
     # Test cases

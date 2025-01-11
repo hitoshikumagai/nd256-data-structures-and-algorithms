@@ -30,7 +30,10 @@ class HuffmanNode:
         freq : int
             The frequency of the character.
         """
-        pass
+        self.char = char
+        self.freq = freq
+        self.left = None
+        self.right = None
 
     def __lt__(self, other: 'HuffmanNode') -> bool:
         """
@@ -46,7 +49,7 @@ class HuffmanNode:
         bool
             True if the frequency of this node is less than the other node, False otherwise.
         """
-        pass
+        return self.freq < other.freq
 
 def calculate_frequencies(data: str) -> dict[str, int]:
     """
@@ -62,7 +65,10 @@ def calculate_frequencies(data: str) -> dict[str, int]:
     Dict[str, int]
         A dictionary with characters as keys and their frequencies as values.
     """
-    pass
+    frequency = defaultdict(int)
+    for char in data:
+        frequency[char] += 1
+    return dict(frequency)
 
 def build_huffman_tree(frequency: dict[str, int]) -> HuffmanNode:
     """
@@ -78,7 +84,18 @@ def build_huffman_tree(frequency: dict[str, int]) -> HuffmanNode:
     HuffmanNode
         The root node of the constructed Huffman Tree.
     """
-    pass
+    priority_queue = [HuffmanNode(char, freq) for char, freq in frequency.items()]
+    heapq.heapify(priority_queue)
+
+    while len(priority_queue) > 1:
+        left = heapq.heappop(priority_queue)
+        right = heapq.heappop(priority_queue)
+        merged = HuffmanNode(None, left.freq + right.freq)
+        merged.left = left
+        merged.right = right
+        heapq.heappush(priority_queue, merged)
+
+    return priority_queue[0] if priority_queue else None
 
 def generate_huffman_codes(node: Optional[HuffmanNode], code: str, huffman_codes: dict[str, str]) -> None:
     """
@@ -93,7 +110,14 @@ def generate_huffman_codes(node: Optional[HuffmanNode], code: str, huffman_codes
     huffman_codes : Dict[str, str]
         A dictionary to store the generated Huffman codes.
     """
-    pass
+    if node is None:
+        return
+
+    if node.char is not None:
+        huffman_codes[node.char] = code
+
+    generate_huffman_codes(node.left, code + "0", huffman_codes)
+    generate_huffman_codes(node.right, code + "1", huffman_codes)
 
 def huffman_encoding(data: str) -> tuple[str, Optional[HuffmanNode]]:
     """
@@ -109,7 +133,16 @@ def huffman_encoding(data: str) -> tuple[str, Optional[HuffmanNode]]:
     Tuple[str, Optional[HuffmanNode]]
         A tuple containing the encoded string and the root of the Huffman Tree.
     """
-    pass
+    if not data:
+        return "", None
+
+    frequency = calculate_frequencies(data)
+    root = build_huffman_tree(frequency)
+    huffman_codes = {}
+    generate_huffman_codes(root, "", huffman_codes)
+
+    encoded_data = "".join(huffman_codes[char] for char in data)
+    return encoded_data, root
 
 def huffman_decoding(encoded_data: str, tree: Optional[HuffmanNode]) -> str:
     """
@@ -127,7 +160,19 @@ def huffman_decoding(encoded_data: str, tree: Optional[HuffmanNode]) -> str:
     str
         The decoded string.
     """
-    pass
+    if not tree or not encoded_data:
+        return ""
+
+    decoded_data = []
+    current_node = tree
+
+    for bit in encoded_data:
+        current_node = current_node.left if bit == "0" else current_node.right
+        if current_node.char is not None:
+            decoded_data.append(current_node.char)
+            current_node = tree
+
+    return "".join(decoded_data)
 
 
 # Main Function
@@ -140,10 +185,28 @@ if __name__ == "__main__":
     decoded_data = huffman_decoding(encoded_data, tree)
     print("Decoded:", decoded_data)
     assert sentence == decoded_data
+    
+    # Test Case 2: Empty string
+    # Tests edge case of empty input
+    # Verifies proper handling of null/empty inputs
+    print("\nTest Case 2: Empty string")
+    test_str2 = ""
+    encoded_data2, tree2 = huffman_encoding(test_str2)
+    print("Original:", test_str2)
+    print("Encoded:", encoded_data2)
+    decoded_data2 = huffman_decoding(encoded_data2, tree2)
+    print("Decoded:", decoded_data2)
+    assert test_str2 == decoded_data2
 
-    # Test Case 2
-    pass
-
-    # Test Case 3
-    pass
+    # Test Case 3: String with special characters
+    # Tests encoding/decoding with a mix of regular and special characters
+    # Verifies handling of extended ASCII and special symbols
+    print("\nTest Case 3: String with special characters")
+    test_str3 = "Hello, World!@#$%^&*()"
+    encoded_data3, tree3 = huffman_encoding(test_str3)
+    print("Original:", test_str3)
+    print("Encoded:", encoded_data3)
+    decoded_data3 = huffman_decoding(encoded_data3, tree3)
+    print("Decoded:", decoded_data3)
+    assert test_str3 == decoded_data3
 

@@ -24,7 +24,30 @@ def get_min_max(ints: list[int]) -> Optional[tuple[int, int]]:
     Optional[tuple[int, int]]: A tuple containing the minimum and maximum 
     integer, or None if the list is empty
     """
-    pass
+    if not ints:
+        return None
+    
+    # Helper function to recursively find the min and max
+    def helper(ints: list[int], low: int, high: int) -> tuple[int, int]:
+        # Base case: when the list has only one element
+        if low == high:
+            return ints[low], ints[low]
+        
+        # Divide the list into two halves
+        mid = (low + high) // 2
+        
+        # Recursively find the min and max for both halves
+        left_min, left_max = helper(ints, low, mid)
+        right_min, right_max = helper(ints, mid + 1, high)
+        
+        # Manually compare and return the min and max
+        min_val = left_min if left_min < right_min else right_min
+        max_val = left_max if left_max > right_max else right_max
+        
+        return min_val, max_val
+    
+    return helper(ints, 0, len(ints) - 1)
+
 
 if __name__ == '__main__':
     # Edge case: Empty input list
