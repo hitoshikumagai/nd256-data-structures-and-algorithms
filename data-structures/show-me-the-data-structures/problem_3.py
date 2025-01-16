@@ -66,8 +66,10 @@ def calculate_frequencies(data: str) -> dict[str, int]:
         A dictionary with characters as keys and their frequencies as values.
     """
     frequency = defaultdict(int)
+
     for char in data:
         frequency[char] += 1
+    
     return dict(frequency)
 
 def build_huffman_tree(frequency: dict[str, int]) -> HuffmanNode:
@@ -84,6 +86,15 @@ def build_huffman_tree(frequency: dict[str, int]) -> HuffmanNode:
     HuffmanNode
         The root node of the constructed Huffman Tree.
     """
+    if not frequency:
+        return None
+    
+    # Special case: single character
+    if len(frequency) == 1:
+        char = next(iter(frequency))
+        root = HuffmanNode(char, frequency[char])
+        return root
+
     priority_queue = [HuffmanNode(char, freq) for char, freq in frequency.items()]
     heapq.heapify(priority_queue)
 
@@ -97,27 +108,44 @@ def build_huffman_tree(frequency: dict[str, int]) -> HuffmanNode:
 
     return priority_queue[0] if priority_queue else None
 
-def generate_huffman_codes(node: Optional[HuffmanNode], code: str, huffman_codes: dict[str, str]) -> None:
+def generate_huffman_codes_iterative(root: Optional[HuffmanNode]) -> dict[str, str]:
     """
-    Generate Huffman codes for each character by traversing the Huffman Tree.
-
+    Generate Huffman codes for each character using an iterative approach.
+    
     Parameters:
     -----------
-    node : Optional[HuffmanNode]
-        The current node in the Huffman Tree.
-    code : str
-        The current Huffman code being generated.
-    huffman_codes : Dict[str, str]
-        A dictionary to store the generated Huffman codes.
+    root : Optional[HuffmanNode]
+        The root of the Huffman Tree.
+    
+    Returns:
+    --------
+    Dict[str, str]
+        A dictionary containing characters and their Huffman codes.
     """
-    if node is None:
-        return
+    if not root:
+        return {}
 
-    if node.char is not None:
-        huffman_codes[node.char] = code
+    # Special case: root is a leaf node (single character case)
+    if root.char is not None:
+        return {root.char: "0"}
 
-    generate_huffman_codes(node.left, code + "0", huffman_codes)
-    generate_huffman_codes(node.right, code + "1", huffman_codes)
+    huffman_codes = {}
+    stack = [(root, "")]
+    
+    while stack:
+        node, code = stack.pop()
+        
+        # If leaf node, store the code
+        if node.char is not None:
+            huffman_codes[node.char] = code
+        
+        # Add child nodes to stack
+        if node.right:
+            stack.append((node.right, code + "1"))
+        if node.left:
+            stack.append((node.left, code + "0"))
+            
+    return huffman_codes
 
 def huffman_encoding(data: str) -> tuple[str, Optional[HuffmanNode]]:
     """
@@ -139,7 +167,7 @@ def huffman_encoding(data: str) -> tuple[str, Optional[HuffmanNode]]:
     frequency = calculate_frequencies(data)
     root = build_huffman_tree(frequency)
     huffman_codes = {}
-    generate_huffman_codes(root, "", huffman_codes)
+    huffman_codes = generate_huffman_codes_iterative(root)
 
     encoded_data = "".join(huffman_codes[char] for char in data)
     return encoded_data, root
@@ -162,6 +190,10 @@ def huffman_decoding(encoded_data: str, tree: Optional[HuffmanNode]) -> str:
     """
     if not tree or not encoded_data:
         return ""
+
+    # Special case: tree is a leaf node (single character case)
+    if tree.char is not None:
+        return tree.char * len(encoded_data)
 
     decoded_data = []
     current_node = tree
@@ -210,3 +242,17 @@ if __name__ == "__main__":
     print("Decoded:", decoded_data3)
     assert test_str3 == decoded_data3
 
+    # Test Case 4: String with repeated characters
+    # Tests encoding/decoding of a string with single repeated character
+    # Verifies optimal encoding length (should be 1 bit per character)
+    # and correct tree structure (single branch with one leaf)
+    print("\nTest Case 4: Repeated characters")
+    test_str4 = "AAAAAAA"
+    encoded_data4, tree4 = huffman_encoding(test_str4)
+    print("Original:", test_str4)
+    print("Encoded:", encoded_data4)
+    decoded_data4 = huffman_decoding(encoded_data4, tree4)
+    print("Decoded:", decoded_data4)
+    assert test_str4 == decoded_data4
+    print("Length of encoded data:", len(encoded_data4))
+    print("Expected optimal length:", len(test_str4))  # Since all characters are same, each should be encoded as single bit
