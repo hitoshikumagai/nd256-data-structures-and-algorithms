@@ -7,7 +7,7 @@ The choice of OrderedDict perfectly aligns with the LRU cache requirements as it
 
 ### Cache Operation Design
 
-* The get method updates items to "most recently used" status by re-inserting them after access
+* The get method updates items to "most recently used" status by re*inserting them after access
 * The set method clearly separates capacity management and update operations, properly handling both existing key updates and new key insertions
 
 ## Time Efficiency:
@@ -18,4 +18,7 @@ The time complexity for key operations are as follows:
 Space Efficiency:
 ## Space Efficiency:
 The space efficiency has the following characteristics:
-* Base storage: O(n), where n is the capacity
+Base storage: O(n)
+* Stores up to n key/value pairs using OrderedDict
+* n is the cache capacity
+* Each entry holds a key/value pair, so

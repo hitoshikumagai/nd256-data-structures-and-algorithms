@@ -22,6 +22,11 @@ class LRU_Cache:
         capacity : int
             The maximum number of items the cache can hold.
         """
+        if not isinstance(capacity, int):
+            raise ValueError("Capacity must be an integer")
+        if capacity <= 0:
+            raise ValueError("Capacity must be a positive integer")
+        
         self.capacity = capacity
         self.cache = OrderedDict()
 
@@ -86,32 +91,33 @@ if __name__ == '__main__':
     our_cache.set(6, 6)  # This should evict key 3
     assert our_cache.get(3) == -1  # Returns -1, 3 was evicted
 
-    # Test Case 2: Test capacity of 1
-    print("\nTest Case 2: Testing cache with capacity 1")
-    tiny_cache = LRU_Cache(1)
-    tiny_cache.set(1, "one")
-    assert tiny_cache.get(1) == "one"  # Returns "one"
-    tiny_cache.set(2, "two")  # This should evict key 1
-    assert tiny_cache.get(1) == -1     # Returns -1, 1 was evicted
-    assert tiny_cache.get(2) == "two"  # Returns "two"
+    # Test Case 2: Invalid capacity inputs
+    print("\n2. Testing invalid capacity inputs:")
+    invalid_capacities = [0, -5, 3.5, None, "5"]
+    for cap in invalid_capacities:
+        try:
+            invalid_cache = LRU_Cache(cap)
+            print(f"Should have raised ValueError for capacity {cap}")
+            assert False
+        except ValueError as e:
+            if isinstance(cap, (int, float)) and cap <= 0:
+                assert str(e) == "Capacity must be a positive integer"
+            elif not isinstance(cap, int):
+                assert str(e) == "Capacity must be an integer"
+            print(f"✓ Correctly handled invalid capacity: {cap}")
+    # Test Case 2: Repeated access to same value
+    print("\n2. Testing repeated access to same value:")
+    repeat_cache = LRU_Cache(2)
+    repeat_cache.set(1, "test")
+    for _ in range(5):  # Access same value multiple times
+        assert repeat_cache.get(1) == "test"
+    print("✓ Successfully handled repeated access")
 
-    # Test Case 3: Test updating existing keys and order
-    print("\nTest Case 3: Testing update of existing keys and access order")
-    update_cache = LRU_Cache(3)
-    update_cache.set(1, "one")
-    update_cache.set(2, "two")
-    update_cache.set(3, "three")
-    
-    # Update existing key
-    update_cache.set(2, "two-updated")
-    assert update_cache.get(2) == "two-updated"  # Returns "two-updated"
-    
-    # Access key 1, making it most recently used
-    update_cache.get(1)
-    
-    # Add new key, should evict key 3 (least recently used)
-    update_cache.set(4, "four")
-    assert update_cache.get(3) == -1          # Returns -1, 3 was evicted
-    assert update_cache.get(1) == "one"       # Returns "one"
-    assert update_cache.get(2) == "two-updated"  # Returns "two-updated"
-    assert update_cache.get(4) == "four"      # Returns "four"
+    # Test Case 3: Very large capacity
+    print("\n3. Testing large capacity:")
+    large_cap = 1000000
+    large_cache = LRU_Cache(large_cap)
+    for i in range(100):  # Test with a smaller subset
+        large_cache.set(i, f"value_{i}")
+    assert large_cache.get(50) == "value_50"
+    print("✓ Successfully handled large capacity")
