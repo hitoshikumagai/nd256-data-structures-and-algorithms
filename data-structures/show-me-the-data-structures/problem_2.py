@@ -40,18 +40,31 @@ def find_files(suffix: str, path: str) -> list[str]:
                               This path is joined with the base path during recursion.
 
         Returns:
-            None: Results are accumulated in the outer scope's matching_files list.
+            matching_files (list): Results are accumulated in the outer scope's matching_files list.
         """
-        if os.path.isdir(current_path):
-            try:
-                for item in os.listdir(current_path):
-                    recursive_search(os.path.join(current_path, item))
-            except PermissionError:
-                pass
-        elif os.path.isfile(current_path) and current_path.endswith(suffix):
-            matching_files.append(current_path)
+    # Input validation
+    if suffix is None or not isinstance(suffix, str):
+        raise TypeError("Suffix must be a string")
+    if path is None or not isinstance(path, str):
+        raise TypeError("Path must be a string")
 
-    recursive_search(path)
+    if not os.path.exists(path):
+        return []
+
+    matching_files = []
+    
+    # os.walk yields a 3-tuple: (dirpath, dirnames, filenames)
+    for root, _, files in os.walk(path):
+        try:
+            # Add all files that end with the suffix in current directory
+            matching_files.extend(
+                os.path.join(root, file)
+                for file in files
+                if file.endswith(suffix)
+            )
+        except PermissionError:
+            continue
+
     return matching_files
 
 
@@ -62,14 +75,23 @@ if __name__ == "__main__":
     print(result)
     # Expected output: ['./testdir/subdir1/a.c', './testdir/subdir3/subsubdir1/b.c', './testdir/subdir5/a.c', './testdir/t1.c']
 
-    # Test Case 2: Finding header files (.h)
-    print("\nTest Case 2: Finding header files")
-    result = find_files(".h", "./testdir")
-    print(result)
-    # Expected output: ['./testdir/subdir1/a.h', './testdir/subdir3/subsubdir1/b.h', './testdir/subdir5/a.h', './testdir/t1.h']
-
-    # Test Case 3: Finding non-existent file type
-    print("\nTest Case 3: Finding non-existent file type")
+    # Test Case 2:Finding non-existent file type
+    print("\nTest Case 2: Finding non-existent file type")
     result = find_files(".py", "./testdir")
     print(result)
-    # Expected output: []
+    # Expected: []
+
+    # Test Case 3:Edge case test cases
+    print("\nTest Case 3: Invalid input path")
+    result = find_files(".txt", "./nonexistent_directory")
+    print(result)
+    # Expected: []
+
+    # Test Case 4: None as suffix
+    print("\nTest Case 4: None as suffix")
+    try:
+        result = find_files(None, "./testdir")
+        print(result)
+    except TypeError:
+        print("Handled None suffix correctly")
+    # Expected: TypeError or empty list
