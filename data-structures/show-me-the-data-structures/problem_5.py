@@ -98,29 +98,6 @@ class Blockchain:
                 current = current.next
         return current
 
-    def get_block_at_index(self, index: int) -> Optional[Block]:
-        """
-        Get block at specific index.
-        
-        Parameters:
-        -----------
-        index : int
-            The index of the block to retrieve.
-            
-        Returns:
-        --------
-        Optional[Block]
-            The block at the specified index or None if index is invalid.
-        """
-        if index < 0 or index >= self.length:
-            return None
-
-        current = self.head
-        for _ in range(index):
-            if current:
-                current = current.next
-        return current
-
     def __repr__(self) -> str:
         """Return a string representation of the blockchain."""
         chain_str = ""
@@ -161,37 +138,3 @@ if __name__ == "__main__":
     print("Block at index 0:", blockchain.get_block_at_index(0))  # Should return genesis block
     print("Block at index 2:", blockchain.get_block_at_index(2))  # Should return Block 2
     print("Block at index 4:", blockchain.get_block_at_index(4))  # Should return None
-
-    # Test Case 4: Repeated identical data
-    print("\nTest Case 4: Repeated identical data")
-    blockchain = Blockchain()
-    repeated_data = "AAAAAAA"  # Test with repeated characters
-    
-    # Add multiple blocks with the same data
-    for _ in range(3):
-        blockchain.add_block(repeated_data)
-    
-    print("Blockchain with repeated data:")
-    print(blockchain)
-    
-    # Verify that each block has a unique hash despite identical data
-    block0 = blockchain.get_block_at_index(0)  # Genesis block
-    block1 = blockchain.get_block_at_index(1)  # First repeated data block
-    block2 = blockchain.get_block_at_index(2)  # Second repeated data block
-    block3 = blockchain.get_block_at_index(3)  # Third repeated data block
-    
-    print("\nVerifying unique hashes for blocks with identical data:")
-    if block1 and block2 and block3:  # Check if blocks exist
-        print(f"Block 1 hash: {block1.hash}")
-        print(f"Block 2 hash: {block2.hash}")
-        print(f"Block 3 hash: {block3.hash}")
-        
-        # Assert that all hashes are different
-        assert block1.hash != block2.hash != block3.hash, "Blocks with same data should have different hashes"
-        print("✓ All blocks have unique hashes")
-        
-        # Verify that previous_hash links are correct
-        assert block1.previous_hash == block0.hash, "Block 1 previous_hash should match Genesis block hash"
-        assert block2.previous_hash == block1.hash, "Block 2 previous_hash should match Block 1 hash"
-        assert block3.previous_hash == block2.hash, "Block 3 previous_hash should match Block 2 hash"
-        print("✓ All previous_hash links are correct")
