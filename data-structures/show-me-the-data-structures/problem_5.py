@@ -107,6 +107,41 @@ class Blockchain:
             current = current.next
         return chain_str
 
+    def validate_chain(self) -> tuple[bool, Optional[str]]:
+        """
+        Validate the integrity of the blockchain.
+        
+        Returns:
+        --------
+        Tuple[bool, Optional[str]]
+            A tuple containing:
+            - bool: True if the chain is valid, False otherwise
+            - Optional[str]: Error message if validation fails, None if successful
+        """
+        if not self.head:
+            return True, None
+
+        current_block = self.head
+        block_index = 0
+
+        while current_block.next:
+            # Validate current block's hash
+            if current_block.hash != current_block.calc_hash():
+                return False, f"Invalid hash in block {block_index}"
+
+            # Validate link between current block and next block
+            if current_block.hash != current_block.next.previous_hash:
+                return False, f"Chain broken between blocks {block_index} and {block_index + 1}"
+
+            current_block = current_block.next
+            block_index += 1
+
+        # Validate the last block's hash
+        if current_block.hash != current_block.calc_hash():
+            return False, f"Invalid hash in block {block_index}"
+
+        return True, None
+
 if __name__ == "__main__":
     # Test cases
     print("Test Case 1: Basic blockchain functionality")
@@ -138,3 +173,35 @@ if __name__ == "__main__":
     print("Block at index 0:", blockchain.get_block_at_index(0))  # Should return genesis block
     print("Block at index 2:", blockchain.get_block_at_index(2))  # Should return Block 2
     print("Block at index 4:", blockchain.get_block_at_index(4))  # Should return None
+
+    print("\nTest Case 4: Empty block creation")
+    blockchain = Blockchain()
+    # Try to add blocks with empty data
+    blockchain.add_block("")
+    blockchain.add_block(None)  # This should handle None gracefully
+    print("Blockchain with empty blocks:")
+    print(blockchain)
+    
+    print("\nTest Case 5: Blocks with same timestamp")
+    blockchain = Blockchain()
+    # Fix the timestamp for testing
+    fixed_time = datetime.datetime.now()
+    
+    # Create multiple blocks with the same timestamp
+    test_blocks = [
+        Block(fixed_time, "Same Time Block 1", "0"),
+        Block(fixed_time, "Same Time Block 2", "0"),
+        Block(fixed_time, "Same Time Block 3", "0")
+    ]
+    
+    # Verify that blocks with same timestamp have different hashes
+    print("Hash comparison for blocks with same timestamp:")
+    for i, block in enumerate(test_blocks):
+        print(f"Block {i + 1} Hash: {block.hash}")
+        
+    # Verify hash uniqueness
+    hashes = [block.hash for block in test_blocks]
+    unique_hashes = set(hashes)
+    print(f"\nNumber of unique hashes: {len(unique_hashes)}")
+    print(f"Number of blocks: {len(test_blocks)}")
+    print(f"All hashes are unique: {len(unique_hashes) == len(test_blocks)}")
