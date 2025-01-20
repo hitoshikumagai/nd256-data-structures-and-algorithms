@@ -32,7 +32,9 @@ class RouteTrieNode:
         """
         Initialize a RouteTrieNode with an empty dictionary for children and no handler.
         """
+        # Dictionary to store child nodes, where key is the path segment
         self.children = {}
+        # Handler will be None for intermediate nodes, and a string for terminal nodes
         self.handler = None
 
 class RouteTrie:
@@ -49,6 +51,7 @@ class RouteTrie:
         Args:
         root_handler (str): The handler for the root node.
         """
+        # Create the root node and set its handler
         self.root = RouteTrieNode()
         self.root.handler = root_handler
 
@@ -60,27 +63,14 @@ class RouteTrie:
         path_parts (list[str]): A list of parts of the route.
         handler (str): The handler for the route.
         """
-        self._insert_recursive(self.root, path_parts, handler)
-
-    def _insert_recursive(self, node: RouteTrieNode, path_parts: list[str], handler: str) -> None:
-        """
-        A helper method for inserting nodes recursively.
-
-        Args:
-        node (RouteTrieNode): The current node in the trie.
-        path_parts (list[str]): Remaining path parts to insert.
-        handler (str): The handler for the route.
-        """
-        if not path_parts:
-            node.handler = handler
-            return
-
-        part = path_parts[0]
-        if part not in node.children:
-            node.children[part] = RouteTrieNode()
-
-        # Recur for the next part of the path
-        self._insert_recursive(node.children[part], path_parts[1:], handler)
+        node = self.root
+        # Traverse/create path nodes
+        for part in path_parts:
+            if part not in node.children:
+                node.children[part] = RouteTrieNode()
+            node = node.children[part]
+        # Set handler on the terminal node
+        node.handler = handler
 
     def find(self, path_parts: list[str]) ->  Optional[str]:
         """
@@ -105,15 +95,13 @@ class RouteTrie:
         Returns:
         str or None: The handler for the route if found, otherwise None.
         """
-        if not path_parts:
-            return node.handler
-
-        part = path_parts[0]
-        if part not in node.children:
-            return None
-
-        # Recur for the next part of the path
-        return self._find_recursive(node.children[part], path_parts[1:])
+        node = self.root
+        # Traverse the trie following the path
+        for part in path_parts:
+            if part not in node.children:
+                return None
+            node = node.children[part]
+        return node.handler
 
 class Router:
     """
@@ -136,18 +124,28 @@ class Router:
 
     def add_handler(self, path: str, handler: str) -> None:
         """
-        Add a handler for a route.
+        Add a new route and its handler to the router.
+        Normalizes the path before adding to the trie.
+
+        Example:
+        router.add_handler("/home/about/", "about handler")
+        Will work the same as: router.add_handler("/home/about", "about handler")
 
         Args:
-        path (str): The route path.
-        handler (str): The handler for the route.
+            path (str): URL path to add (e.g., "/home/about")
+            handler (str): Handler for this path
         """
         path_parts = self.split_path(path)
         self.route_trie.insert(path_parts, handler)
 
     def lookup(self, path: str) -> str:
         """
-        Look up a route and return the associated handler.
+        Look up a path and return its handler or the not-found handler.
+        Handles edge cases like empty paths and normalizes the input.
+
+        Example:
+        router.lookup("/home/about/")  # Same as "/home/about"
+        router.lookup("")              # Returns not_found_handler
 
         Args:
         path (str): The route path.
@@ -155,15 +153,22 @@ class Router:
         Returns:
         str: The handler for the route if found, otherwise the not-found handler.
         """
-        handler = self.route_trie.find(path)
-        if handler:
-            return handler
-        else:
+        if path == "":
             return self.not_found_handler
+
+        path_parts = self.split_path(path)
+        handler = self.route_trie.find(path_parts)
+        return handler if handler else self.not_found_handler
 
     def split_path(self, path: str) -> list[str]:
         """
-        Split the path into parts and remove empty parts to handle trailing slashes.
+        Normalize and split a path into segments.
+        Handles edge cases like trailing slashes and empty paths.
+
+        Example:
+        split_path("/home/about/")  # Returns ["home", "about"]
+        split_path("/")             # Returns []
+        split_path("")              # Returns []
 
         Args:
             path (str): The path to split.
@@ -171,10 +176,7 @@ class Router:
         Returns:
             List[str]: A list of parts of the path.
         """
-        # Remove leading and trailing slashes, then split by '/'
-        path_parts = path.strip('/').split('/')
-        # Return empty list if the path is just slashes or empty
-        return path_parts if path_parts != [''] else []
+        return path.strip('/').split('/') if path.strip('/') else []
 
 if __name__ == '__main__':
     # create the router and add a route

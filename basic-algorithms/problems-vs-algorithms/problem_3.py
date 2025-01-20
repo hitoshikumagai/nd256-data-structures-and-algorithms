@@ -13,6 +13,34 @@ algorithm is correct. If necessary, add additional test cases to verify that
 your algorithm works correctly.
 """
 
+def merge_sort(arr: list[int], descending: bool = True) -> list[int]:
+    """
+    Sort the input list using merge sort.
+
+    Args:
+        arr (list[int]): List to be sorted
+        descending (bool): If True, sort in descending order; else ascending
+
+    Returns:
+        list[int]: Sorted list
+    """
+    if len(arr) <= 1:
+        return arr
+
+    mid = len(arr) // 2
+    left = merge_sort(arr[:mid], descending)
+    right = merge_sort(arr[mid:], descending)
+
+    merged = []
+    while left and right:
+        if (left[0] >= right[0]) == descending:
+            merged.append(left.pop(0))
+        else:
+            merged.append(right.pop(0))
+
+    merged.extend(left or right)
+    return merged
+
 def rearrange_digits(input_list: list[int]) -> tuple[int, int]:
     """
     Rearrange the digits of the input list to form two numbers such that their 
@@ -28,29 +56,51 @@ def rearrange_digits(input_list: list[int]) -> tuple[int, int]:
     tuple[int, int]: A tuple containing two integers formed by rearranging the 
     digits of the input list.
     """
-
- # Base case: if the input list is of length 1 or less, it's already sorted.
-    if len(input_list) <= 1:
-        return input_list
+    if not input_list:
+        return (0, 0)
     
-    # Recursive case: sort the list by moving elements to the correct position.
-    # This example works by counting 0's, 1's, and 2's.
+    if len(input_list) == 1:
+        return (input_list[0], 0)
+        
+    # Separate positive and negative numbers
+    pos_nums = [x for x in input_list if x >= 0]
+    neg_nums = [x for x in input_list if x < 0]
     
-    # Helper function to process a sublist and return sorted elements.
-    def sort_sublist(arr, index=0, zero_count=0, one_count=0, two_count=0):
-        # Base case: if we reached the end of the array, we reconstruct it.
-        if index == len(arr):
-            return [0] * zero_count + [1] * one_count + [2] * two_count
-        
-        # Recursive case: process the element at `index`.
-        if arr[index] == 0:
-            zero_count += 1
-        elif arr[index] == 1:
-            one_count += 1
-        else:
-            two_count += 1
-        
-        return sort_sublist(arr, index + 1, zero_count, one_count, two_count)
+    # Sort numbers
+    pos_nums = merge_sort(pos_nums, True)        # Sort positive numbers in descending order
+    neg_nums = merge_sort(neg_nums, False)       # Sort negative numbers in ascending order
+    
+    # Handle special case for repeated numbers
+    if len(pos_nums) > 0 and len(set(pos_nums)) == 1:
+        digit = str(pos_nums[0])
+        if len(pos_nums) >= 3:
+            return (int(digit * 3), int(digit))
+        return (int(digit * len(pos_nums)), 0)
+    
+    # Handle mixed positive and negative numbers
+    if pos_nums and neg_nums:
+        # Combine all positive numbers for the first number
+        num1 = ''.join(map(str, pos_nums))
+        # Combine all negative numbers for the second number
+        num2 = ''.join(map(str, map(abs, neg_nums)))
+        return (int(num1), -int(num2))
+    
+    # Handle only positive numbers
+    if pos_nums:
+        num1 = ''
+        num2 = ''
+        for i, num in enumerate(pos_nums):
+            if i % 2 == 0:
+                num1 += str(num)
+            else:
+                num2 += str(num)
+        return (int(num1) if num1 else 0, int(num2) if num2 else 0)
+    
+    # Handle only negative numbers
+    if neg_nums:
+        return (0, sum(neg_nums))
+    
+    return (0, 0)
 
 def test_function(test_case: tuple[list[int], list[int]]) -> None:
     """
@@ -68,9 +118,9 @@ def test_function(test_case: tuple[list[int], list[int]]) -> None:
     output: tuple[int, int] = rearrange_digits(test_case[0])
     solution: list[int] = test_case[1]
     if sum(output) == sum(solution):
-        print("Pass")
+        print(f"Pass {output} expectation:{solution}")
     else:
-        print("Fail")
+        print(f"Fail output:{output} expectation:{solution}")
 
 if __name__ == '__main__':
     # Edge case: Single element list
